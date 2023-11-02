@@ -1,6 +1,6 @@
 module ContractionHierarchies
 
-export gps, HierarchicalMap, HMaps, add_map, remove_map
+export local_node, shortest_time, HierarchicalMap, HMaps, add_map, remove_map
 
 import Downloads
 import Serialization
@@ -316,7 +316,7 @@ function shortest_time(hmap::HierarchicalMap, src_dst::Pair{LocalNode,LocalNode}
     nvg = Graphs.nv(fast_map.data.g)
     max_speed = maximum(values(hmap.speeds))
     heuristic = map(1:nvg) do u
-        minimum(finite_dst) do v
+        minimum(finite_dst, init = Inf) do v
             OpenStreetMapX.get_distance(u, v, fast_map.data.nodes, fast_map.data.n) / max_speed + fast_dists_dst[v]
         end
     end
@@ -490,7 +490,7 @@ function add_map(hmap::HierarchicalMap, args...)
     rm(string(car_pbf, ".cache"), force=true)
     map_data = OpenStreetMapX.get_map_data(car_pbf)
     hmap.local_caches[path] = map_data
-    @show map_data.bounds
+    @info "Bounds: $(map_data.bounds)"
     hmap.local_bounds[path] = map_data.bounds
     open(LOCAL_BOUNDS, "w") do f
         Serialization.serialize(f, hmap.local_bounds)
